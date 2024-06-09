@@ -37,7 +37,7 @@ func handleConnection(conn net.Conn) {
 		}
 		cleanMessage := strings.TrimSpace(message)
 		fmt.Println(cleanMessage)
-		if strings.Compare(cleanMessage, "ping") == 0 {
+		if strings.Compare(cleanMessage, "PING") == 0 {
 			_, err = conn.Write([]byte("+PONG\r\n"))
 			if err != nil {
 				os.Exit(1)
