@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"os"
@@ -29,21 +28,31 @@ func main() {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	fmt.Println("the the addrssing of the connection is ", conn.RemoteAddr())
-	reader := bufio.NewReader(conn)
+	buf := make([]byte, 0, 4096) // big buffer
+	tmp := make([]byte, 256)     // using small tmo buffer for demonstrating
 	for {
-		message, err := reader.ReadString('\n')
+		n, err := conn.Read(tmp)
 		if err != nil {
 			fmt.Println("error while reading data")
 		}
-		cleanMessage := strings.TrimSpace(message)
+		buf = append(buf, tmp[:n]...)
+		fmt.Println("the message is ", buf)
+		cleanMessage := string(buf)
 		fmt.Println(cleanMessage)
-		if strings.Compare(cleanMessage, "PING") == 0 {
-			_, err = conn.Write([]byte("+PONG\r\n"))
-			if err != nil {
-				os.Exit(1)
+		leng := len(cleanMessage)
+		start := 0
+		strLen := len("*1\r\n$4\r\nPING\r\n")
+		fmt.Println(leng)
+		for leng >= strLen {
+			if strings.Compare(cleanMessage[start:strLen], "*1\r\n$4\r\nPING\r\n") == 0 {
+				_, err = conn.Write([]byte("+PONG\r\n"))
+				if err != nil {
+					os.Exit(1)
+				}
 			}
+			start += strLen
+			leng -= strLen
 		}
-		os.Exit(0)
 	}
 
 }
